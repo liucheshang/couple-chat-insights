@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>情侣聊天深度分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: #0e1318;
+    color: #e9eef4;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.6;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.header {
+    text-align: center;
+    padding: 40px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 30px;
+}
+.header h1 { font-size: 28px; font-weight: 600; margin-bottom: 10px; }
+.header .subtitle { color: #8fa1b4; font-size: 14px; }
+
+/* 健康分仪表盘 */
+.health-score {
+    text-align: center;
+    padding: 40px 20px;
+    background: #151d26;
+    border-radius: 16px;
+    margin-bottom: 30px;
+}
+.health-score .score {
+    font-size: 72px;
+    font-weight: 700;
+    color: #07c160;
+}
+.health-score .label { color: #8fa1b4; font-size: 14px; margin-top: 8px; }
+.health-detail {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-top: 30px;
+    text-align: center;
+}
+.health-detail .item .num { font-size: 20px; font-weight: 600; }
+.health-detail .item .name { font-size: 12px; color: #8fa1b4; margin-top: 4px; }
+
+/* 数据卡片网格 */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 30px;
+}
+.card {
+    background: #151d26;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+}
+.card .num { font-size: 28px; font-weight: 600; }
+.card .name { font-size: 13px; color: #8fa1b4; margin-top: 6px; }
+
+/* 章节 */
+.section {
+    background: #151d26;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+}
+.section h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.section .desc { color: #8fa1b4; font-size: 13px; margin-bottom: 20px; }
+
+/* 对比表格 */
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.compare-table th, .compare-table td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.compare-table th {
+    color: #8fa1b4;
+    font-weight: 500;
+    font-size: 13px;
+}
+.compare-table td { font-size: 15px; }
+.me-col { color: #5b8def; }
+.her-col { color: #f06292; }
+
+/* 爱情三角 */
+.triangle {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    padding: 20px 0;
+}
+.triangle .dim .score { font-size: 36px; font-weight: 700; color: #a78bfa; }
+.triangle .dim .name { color: #8fa1b4; font-size: 14px; margin-top: 8px; }
+.triangle .dim .desc { color: #8fa1b4; font-size: 12px; margin-top: 4px; }
+
+/* 图表容器 */
+.chart {
+    width: 100%;
+    height: 350px;
+    margin: 20px 0;
+}
+
+/* 提示框 */
+.tip {
+    background: rgba(91, 141, 239, 0.1);
+    border-left: 3px solid #5b8def;
+    padding: 16px;
+    border-radius: 8px;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #c9d6e3;
+}
+
+/* 建议列表 */
+.advice-list {
+    margin-top: 20px;
+}
+.advice-list .item {
+    padding: 16px;
+    background: rgba(255,182,72,0.08);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+.advice-list .item strong { color: #ffb648; }
+
+.footer {
+    text-align: center;
+    color: #8fa1b4;
+    font-size: 12px;
+    padding: 30px 0;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin-top: 40px;
+}
+
+@media (max-width: 768px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .health-detail { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>情侣聊天深度分析报告</h1>
+    <div class="subtitle">{{START_DATE}} ~ {{END_DATE}} · 共 {{TOTAL_DAYS}} 天</div>
+</div>
+
+<!-- 一句话结论 -->
+<div class="section" style="background: linear-gradient(135deg, #151d26 0%, #1a2332 100%); border-left: 4px solid #ffb648;">
+    <h2 style="border:none; padding:0; margin-bottom:12px;">一句话总结</h2>
+    <div style="font-size: 18px; line-height: 1.8; color: #ffb648;">
+        {{ONE_LINE_CONCLUSION}}
+    </div>
+</div>
+
+<!-- 关系类型判断 -->
+<div class="section">
+    <h2>你们是什么类型的关系？</h2>
+    <div style="text-align: center; padding: 20px 0;">
+        <div style="font-size: 32px; font-weight: 700; color: #f06292; margin-bottom: 12px;">{{RELATIONSHIP_TYPE}}</div>
+        <div style="color: #8fa1b4; font-size: 14px;">{{RELATIONSHIP_DESC}}</div>
+    </div>
+</div>
+
+<!-- 综合健康分 -->
+<div class="health-score">
+    <div class="score">{{HEALTH_SCORE}}</div>
+    <div class="label">关系健康综合分（满分100）</div>
+    <div class="health-detail">
+        <div class="item">
+            <div class="num">{{HEALTH_GOTTMAN}}</div>
+            <div class="name">Gottman比率</div>
+        </div>
+        <div class="item">
+            <div class="num">{{HEALTH_CARE}}</div>
+            <div class="name">关心投入</div>
+        </div>
+        <div class="item">
+            <div class="num">{{HEALTH_REPAIR}}</div>
+            <div class="name">冲突修复</div>
+        </div>
+        <div class="item">
+            <div class="num">{{HEALTH_GAP}}</div>
+            <div class="name">断联频率</div>
+        </div>
+        <div class="item">
+            <div class="num">{{HEALTH_FOUR}}</div>
+            <div class="name">四骑士</div>
+        </div>
+    </div>
+</div>
+
+<!-- 基础数据 -->
+<div class="grid">
+    <div class="card">
+        <div class="num">{{TOTAL_MSGS}}</div>
+        <div class="name">总消息数</div>
+    </div>
+    <div class="card">
+        <div class="num">{{ME_PCT}}%</div>
+        <div class="name">你发的比例</div>
+    </div>
+    <div class="card">
+        <div class="num">{{HER_PCT}}%</div>
+        <div class="name">TA发的比例</div>
+    </div>
+    <div class="card">
+        <div class="num">{{GOTTMAN_RATIO}}:1</div>
+        <div class="name">Gottman比率</div>
+    </div>
+</div>
+
+<!-- 逐月消息量趋势 -->
+<div class="section">
+    <h2>聊天节奏逐月变化</h2>
+    <div class="desc">看看你们的聊天频率是越来越热、越来越冷，还是忽高忽低。</div>
+    <div id="chartMonthly" class="chart"></div>
+</div>
+
+<!-- 24小时聊天生物钟 -->
+<div class="section">
+    <h2>你们什么时候最容易吵架？</h2>
+    <div class="desc">看看一天里哪个时间点最容易出现负面情绪。</div>
+    <div id="chartHourly" class="chart"></div>
+</div>
+
+<!-- 爱情三角 -->
+<div class="section">
+    <h2>爱情三角理论（Sternberg）</h2>
+    <div class="desc">完美的爱需要亲密、激情、承诺三者平衡。</div>
+    <div class="triangle">
+        <div class="dim">
+            <div class="score">{{TRIANGLE_INTIMACY}}</div>
+            <div class="name">亲密 Intimacy</div>
+            <div class="desc">关心、倾诉、分享</div>
+        </div>
+        <div class="dim">
+            <div class="score">{{TRIANGLE_PASSION}}</div>
+            <div class="name">激情 Passion</div>
+            <div class="desc">思念、爱称、浪漫</div>
+        </div>
+        <div class="dim">
+            <div class="score">{{TRIANGLE_COMMITMENT}}</div>
+            <div class="name">承诺 Commitment</div>
+            <div class="desc">未来规划、长期承诺</div>
+        </div>
+    </div>
+    <div class="tip">
+        完美的爱是三个维度都高。如果只有亲密是友谊，只有激情是迷恋，只有承诺是空壳。
+    </div>
+</div>
+
+<!-- Gottman四骑士 -->
+<div class="section">
+    <h2>Gottman 四骑士（关系破裂的四大信号）</h2>
+    <div class="desc">这四个信号是关系破裂的最强预测指标，其中<b>蔑视</b>是头号杀手。</div>
+    <table class="compare-table">
+        <tr>
+            <th>类型</th>
+            <th class="me-col">{{SENDER_ME}}</th>
+            <th class="her-col">{{SENDER_HER}}</th>
+            <th>含义</th>
+        </tr>
+        <tr>
+            <td>批评</td>
+            <td class="me-col">{{CRITICISM_ME}}</td>
+            <td class="her-col">{{CRITICISM_HER}}</td>
+            <td>攻击人格而非行为</td>
+        </tr>
+        <tr>
+            <td>蔑视</td>
+            <td class="me-col">{{CONTEMPT_ME}}</td>
+            <td class="her-col">{{CONTEMPT_HER}}</td>
+            <td>讽刺、贬低（最强离婚预测指标）</td>
+        </tr>
+        <tr>
+            <td>防御</td>
+            <td class="me-col">{{DEFENSIVE_ME}}</td>
+            <td class="her-col">{{DEFENSIVE_HER}}</td>
+            <td>推卸责任、反咬一口</td>
+        </tr>
+        <tr>
+            <td>筑墙</td>
+            <td class="me-col">{{STONEWALLING_ME}}</td>
+            <td class="her-col">{{STONEWALLING_HER}}</td>
+            <td>沉默、回避、不回应</td>
+        </tr>
+    </table>
+</div>
+
+<!-- 依恋风格 -->
+<div class="section">
+    <h2>依恋风格分析</h2>
+    <div class="desc">从语言行为反推你们的依恋风格（统计推断，非心理诊断）。</div>
+    <table class="compare-table">
+        <tr>
+            <th>类型</th>
+            <th class="me-col">{{SENDER_ME}}</th>
+            <th class="her-col">{{SENDER_HER}}</th>
+            <th>表现</th>
+        </tr>
+        <tr>
+            <td>焦虑型</td>
+            <td class="me-col">{{ANXIOUS_ME}}</td>
+            <td class="her-col">{{ANXIOUS_HER}}</td>
+            <td>反复求证、怕失去、追问</td>
+        </tr>
+        <tr>
+            <td>回避型</td>
+            <td class="me-col">{{AVOIDANT_ME}}</td>
+            <td class="her-col">{{AVOIDANT_HER}}</td>
+            <td>沉默、敷衍、给空间</td>
+        </tr>
+    </table>
+    <div class="tip">
+        焦虑 + 回避是最常见的"追逃模式"：一个追，一个逃，越追越逃，越逃越追。
+    </div>
+</div>
+
+<!-- 关心与投入 -->
+<div class="section">
+    <h2>关心与投入对比</h2>
+    <div class="desc">谁更主动关心对方？谁更爱说甜话？</div>
+    <div id="chartCare" class="chart"></div>
+</div>
+
+<!-- 关心与投入 -->
+<div class="section">
+    <h2>谁更主动？谁更投入？</h2>
+    <div class="desc">谁先开口？谁问问题多？谁更爱一口气发很多条？</div>
+    <table class="compare-table">
+        <tr>
+            <th>维度</th>
+            <th class="me-col">{{SENDER_ME}}</th>
+            <th class="her-col">{{SENDER_HER}}</th>
+            <th>解读</th>
+        </tr>
+        <tr>
+            <td>谁先开场</td>
+            <td class="me-col">{{CONV_START_ME}}次</td>
+            <td class="her-col">{{CONV_START_HER}}次</td>
+            <td>{{CONV_START_TIP}}</td>
+        </tr>
+        <tr>
+            <td>问句比例</td>
+            <td class="me-col">{{Q_ME_PCT}}%</td>
+            <td class="her-col">{{Q_HER_PCT}}%</td>
+            <td>谁更想了解对方</td>
+        </tr>
+        <tr>
+            <td>连发≥3条次数</td>
+            <td class="me-col">{{BURST_ME}}次</td>
+            <td class="her-col">{{BURST_HER}}次</td>
+            <td>谁更"倾泻式"说话</td>
+        </tr>
+        <tr>
+            <td>最长一次连发</td>
+            <td class="me-col">{{BURST_ME_MAX}}条</td>
+            <td class="her-col">{{BURST_HER_MAX}}条</td>
+            <td>谁更激动时停不下来</td>
+        </tr>
+    </table>
+</div>
+
+<!-- 互动节奏 -->
+<div class="section">
+    <h2>互动节奏</h2>
+    <div class="grid">
+        <div class="card">
+            <div class="num">{{REPLY_ME}} 分钟</div>
+            <div class="name">你回复TA（中位）</div>
+        </div>
+        <div class="card">
+            <div class="num">{{REPLY_HER}} 分钟</div>
+            <div class="name">TA回复你（中位）</div>
+        </div>
+        <div class="card">
+            <div class="num">{{MAX_GAP}} 天</div>
+            <div class="name">最长断联</div>
+        </div>
+        <div class="card">
+            <div class="num">{{EMOTION_CONTAGION}}%</div>
+            <div class="name">情绪传染率</div>
+        </div>
+    </div>
+    <div class="tip">
+        <b>情绪传染率</b>：一方发负面消息后，另一方也跟着发负面的概率。越高说明情绪越容易互相影响，也越容易吵架。
+    </div>
+</div>
+
+<!-- 生活节奏 -->
+<div class="section">
+    <h2>你们都在聊什么？</h2>
+    <div class="desc">看看你们的话题都集中在哪些方面。</div>
+    <div id="chartTopics" class="chart"></div>
+</div>
+
+<!-- 月度情感趋势 -->
+<div class="section">
+    <h2>你们的感情温度逐月变化</h2>
+    <div class="desc">每个月的情感温度（0=全是负面，100=全是正面）。看看你们是越来越热，还是越来越冷。</div>
+    <div id="chartSentiment" class="chart"></div>
+</div>
+
+<!-- 说话风格对比 -->
+<div class="section">
+    <h2>吵架是怎么结束的？</h2>
+    <table class="compare-table">
+        <tr>
+            <th>维度</th>
+            <th class="me-col">{{SENDER_ME}}</th>
+            <th class="her-col">{{SENDER_HER}}</th>
+            <th>解读</th>
+        </tr>
+        <tr>
+            <td>最长一次连发</td>
+            <td class="me-col">{{BURST_ME_MAX}}条</td>
+            <td class="her-col">{{BURST_HER_MAX}}条</td>
+            <td>谁更激动时停不下来</td>
+        </tr>
+        <tr>
+            <td>冲突修复率</td>
+            <td colspan="2" style="text-align:center">{{REPAIR_RATE}}%</td>
+            <td>吵架后多久能和好</td>
+        </tr>
+    </table>
+</div>
+
+<!-- 给你们的建议 -->
+<div class="section">
+    <h2>给你们的建议</h2>
+    <div class="advice-list">
+        <div class="item">
+            <strong>1. Gottman比率 {{GOTTMAN_RATIO}}:1</strong><br>
+            {{GOTTMAN_ADVICE}}
+        </div>
+        <div class="item">
+            <strong>2. 最长断联 {{MAX_GAP}} 天</strong><br>
+            {{GAP_ADVICE}}
+        </div>
+        <div class="item">
+            <strong>3. 四骑士信号</strong><br>
+            {{FOUR_ADVICE}}
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    Couple Chat Insights · 纯本地分析 · 隐私零泄露<br>
+    数据仅在你的电脑上处理，不会上传任何信息
+</div>
+
+<script>
+// 逐月消息量
+var monthlyData = {{MONTHLY_DATA}};
+var chart1 = echarts.init(document.getElementById('chartMonthly'));
+chart1.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['你', 'TA'], textStyle: { color: '#8fa1b4' } },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: monthlyData.labels, axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }, axisLabel: { color: '#8fa1b4' } },
+    yAxis: { type: 'value', axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }, axisLabel: { color: '#8fa1b4' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+    series: [
+        { name: '你', type: 'line', data: monthlyData.me, smooth: true, itemStyle: { color: '#5b8def' } },
+        { name: 'TA', type: 'line', data: monthlyData.her, smooth: true, itemStyle: { color: '#f06292' } }
+    ]
+});
+
+// 24小时分布
+var hourlyData = {{HOURLY_DATA}};
+var chart2 = echarts.init(document.getElementById('chartHourly'));
+chart2.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: hourlyData.labels, axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }, axisLabel: { color: '#8fa1b4' } },
+    yAxis: { type: 'value', axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }, axisLabel: { color: '#8fa1b4' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+    series: [{ type: 'bar', data: hourlyData.values, itemStyle: { color: '#a78bfa' } }]
+});
+
+// 关心投入对比
+var careData = {{CARE_DATA}};
+var chart3 = echarts.init(document.getElementById('chartCare'));
+chart3.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['你', 'TA'], textStyle: { color: '#8fa1b4' } },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: careData.labels, axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }, axisLabel: { color: '#8fa1b4' } },
+    yAxis: { type: 'value', axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }, axisLabel: { color: '#8fa1b4' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+    series: [
+        { name: '你', type: 'bar', data: careData.me, itemStyle: { color: '#5b8def' } },
+        { name: 'TA', type: 'bar', data: careData.her, itemStyle: { color: '#f06292' } }
+    ]
+});
+
+window.addEventListener('resize', function() {
+    chart1.resize();
+    chart2.resize();
+    chart3.resize();
+    chart4.resize();
+    chart5.resize();
+});
+
+// 话题分布
+var topicsData = {{TOPICS_DATA}};
+var chart4 = echarts.init(document.getElementById('chartTopics'));
+chart4.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: topicsData.labels, axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }, axisLabel: { color: '#8fa1b4' } },
+    yAxis: { type: 'value', axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }, axisLabel: { color: '#8fa1b4' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+    series: [{ type: 'bar', data: topicsData.values, itemStyle: { color: '#ffb648' } }]
+});
+
+// 月度情感趋势
+var sentimentData = {{SENTIMENT_DATA}};
+var chart5 = echarts.init(document.getElementById('chartSentiment'));
+chart5.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: sentimentData.labels, axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }, axisLabel: { color: '#8fa1b4' } },
+    yAxis: { type: 'value', min: 0, max: 100, axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }, axisLabel: { color: '#8fa1b4' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+    series: [{ type: 'line', data: sentimentData.scores, smooth: true, areaStyle: {}, itemStyle: { color: '#07c160' } }]
+});
+</script>
+
+</body>
+</html>
