@@ -663,7 +663,7 @@ def analyze(messages):
     hourly_values = hourly
 
     # ---- 关系类型判断 ----
-    if max_gap > 90:
+    if max_gap > 30:
         rel_type = '分分合合型'
         rel_desc = '你们有过长时间断联，关系像过山车。吵架、和好、再吵架、再和好。这种模式要么彻底稳定下来，要么迟早会分。'
     elif me_anxious > her_anxious and her_avoidant > me_avoidant:
